@@ -2,7 +2,7 @@
 apiVersion: storage.crossplane.io/v1alpha1
 kind: PostgreSQLInstance
 metadata:
-  name: cloud-postgresql-claim
+  name: postgresql
   namespace: demo
 spec:
   classReference:

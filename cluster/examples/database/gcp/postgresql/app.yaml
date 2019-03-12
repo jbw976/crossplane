@@ -1,0 +1,93 @@
+## Example Kubernetes application workload that consumes the PostgreSQL resource
+apiVersion: workload.crossplane.io/v1alpha1
+kind: KubernetesApplication
+metadata:
+  name: myapp-demo
+  namespace: demo
+  labels:
+    app: myapp-demo
+spec:
+  resourceSelector:
+    matchLabels:
+      app: myapp-demo
+  clusterSelector:
+    matchLabels:
+      app: myapp-demo
+  resourceTemplates:
+  - metadata:
+      name: myapp-demo-namespace
+      labels:
+        app: myapp-demo
+    spec:
+      template:
+        apiVersion: v1
+        kind: Namespace
+        metadata:
+          name: myapp
+          labels:
+            app: myapp
+  - metadata:
+      name: myapp-demo-deployment
+      labels:
+        app: myapp-demo
+    spec:
+      secrets:
+      - name: postgresql  # Resource claim secret name is derived from claim name
+      template:
+        apiVersion: apps/v1
+        kind: Deployment
+        metadata:
+          namespace: myapp
+          name: myapp
+          labels:
+            app: myapp
+        spec:
+          selector:
+            matchLabels:
+              app: myapp
+          template:
+            metadata:
+              labels:
+                app: myapp
+            spec:
+              containers:
+                - name: myapp
+                  image: myorg/myapp:0.1
+                  env:
+                    - name: MYAPP_DB_HOST
+                      valueFrom:
+                        secretKeyRef:
+                          name: myapp-demo-deployment-postgresql
+                          key: endpoint
+                    - name: MYAPP_DB_USER
+                      valueFrom:
+                        secretKeyRef:
+                          name: myapp-demo-deployment-postgresql
+                          key: username
+                    - name: MYAPP_DB_PASSWORD
+                      valueFrom:
+                        secretKeyRef:
+                          name: myapp-demo-deployment-postgresql
+                          key: password
+                  ports:
+                    - containerPort: 80
+                      name: myapp
+  - metadata:
+      name: myapp-demo-service
+      labels:
+        app: myapp-demo
+    spec:
+      template:
+        apiVersion: v1
+        kind: Service
+        metadata:
+          namespace: myapp
+          name: myapp
+          labels:
+            app: myapp
+        spec:
+          ports:
+            - port: 80
+          selector:
+            app: myapp
+          type: LoadBalancer
