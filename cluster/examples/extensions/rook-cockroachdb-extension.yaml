@@ -1,0 +1,7 @@
+apiVersion: extensions.crossplane.io/v1alpha1
+kind: ExtensionRequest
+metadata:
+  name: rook-cockroachdb-crossplane-extension
+  namespace: rook-cockroachdb-system
+spec:
+  package: rook/cockroachdb:master
