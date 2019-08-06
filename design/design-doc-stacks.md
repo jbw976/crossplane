@@ -56,7 +56,8 @@ All further functionality for Crossplane (databases, buckets, etc.) could then b
 This section describes the end to end installation flow implemented by the Stack Manager:
 
 * The SM starts up with a default “source” registry (e.g. `registry.crossplane.io`) that contains packages (bundles of a Stack and its custom controllers and CRDs) published to it
-* User creates an `ExtensionRequest` instance to request a Stack be installed in the cluster, which includes everything needed to successfully run that Stack.  The `ExtensionRequest` includes:
+* User creates a custom resource instance that represents their request to install a new Stack in the cluster, for example `PlatformStackRequest` or `ApplicationStackRequest`.
+The CRD type used here will depend on what type of Stack they wish to install, but will always include everything needed to successfully run that Stack, such as:
   * an optional source registry that can be any arbitrary registry location.  If this field is not specified then the SM's default source registry will be used.
   * One of the following must be specified:
     * package name (`gitlab`) OR
@@ -64,9 +65,10 @@ This section describes the end to end installation flow implemented by the Stack
       * Note: this code path is exactly the same as dependency resolution
 * Performs dependency resolution that determines all packages/Stacks that are required by this Stack and all of its dependent Stacks
 * Pulls all necessary Stack packages from the registry
-* Unpacks them and installs all owned/defined CRDs and transforms the unpackaged content into an `Extension` CRD instance that serves as a record of the install
+* Unpacks them and installs all owned/defined CRDs into the control plane
+* Transforms the unpackaged content into a `Stack` custom resource instance that serves as a record of the install
 * Starts up the custom controller so that it is in the running state
-* Marks the `ExtensionRequest` status as succeeded
+* Marks the stack request CR status as succeeded
 
 ## `ExtensionRequest` CRD
 
@@ -312,6 +314,10 @@ Stack packages should only have a few KB of yaml files, so it's a significant co
 The processing/unpacking logic can easily move to its own image that can be used as a base layer in the future (or a CLI tool), so this approach is not very divergent.
 It is a good place to start and iterate over as we learn more without investing much effort that cannot be reused.
 
+## Security and Isolation
+
+Details on the installation and runtime security and isolation of stacks can be read in the [security and isolation design doc](./one-pager-stacks-security-isolation.md).
+
 ## Questions and Open Issues
 
 * Dependency resolution design: [#434](https://github.com/crossplaneio/crossplane/issues/434)
@@ -320,5 +326,4 @@ It is a good place to start and iterate over as we learn more without investing 
 * Support installation of extensions from private registries [#505](https://github.com/crossplaneio/crossplane/issues/505)
 * Standardize extension package format and layout [#507](https://github.com/crossplaneio/crossplane/issues/507)
 * Figure out model for crossplane core vs extensions [#531](https://github.com/crossplaneio/crossplane/issues/531)
-* Single extension should be able to install multiple controllers [#532](https://github.com/crossplaneio/crossplane/issues/532)
 * Prototype alternate extension implementations [#548](https://github.com/crossplaneio/crossplane/issues/548)
