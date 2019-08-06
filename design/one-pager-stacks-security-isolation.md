@@ -11,7 +11,7 @@ All new types of functionality, from an end user wanting to install a simple app
 They have the same approach to security and access control and the artifacts that they install have the same scope of impact to the control plane.
 
 This one size fits all approach is not ideal though, the multiple scenarios and personas need finer grain control around security, access, and isolation.
-This design doc proposes and new approach for the Crossplane Stack Manager (SM) that will support this increased control for the installation of stacks.
+This design doc proposes a new approach for the Crossplane Stack Manager (SM) that will support this increased control for the installation of stacks.
 
 ## Personas and Scenarios
 
@@ -21,7 +21,7 @@ This design proposes support for two high level personas/scenarios as an effecti
 * **Platform:** An administrator of the control plane that is installing wide ranging support for lower level infrastructure and platform components,
 such as installing support for an entire cloud provider and all of its infrastructure and platform services.
   * An example of this would be the `GCP` stack that contains a `Network` primitive and the `CloudSQL` resource.
-This person would also be expected to define resource classes and other environment specific details.
+This persona would also be expected to define resource classes and other environment specific details.
 * **Application:** An application operator or end user of Crossplane.
 They are focused at a higher level and want to install the functionality of a single application, such as `GitLab` or `WordPress`.
 This persona is not expected to know or control any details about the environments managed by the Crossplane cluster, they simply need to consume their new application of choice.
@@ -33,7 +33,7 @@ The key difference in how the supported personas/scenarios will be handled is in
 * **Platform stacks** will be given permissions to watch, access, and create resources at a **cluster level**, i.e. across **all namespaces**.
 * **Application stacks** will be given permissions only within a **single namespace**.
 
-This means that application stacks should not be able to directly affect any resources outside of the specific namespace they are installed into, while platform stacks operate at a higher level or privilege and can affect the entire cluster.
+This means that application stacks should not be able to directly affect any resources outside of the specific namespace they are installed into, while platform stacks operate at a higher level of privilege and can affect the entire cluster.
 
 ### CRD Scoping
 
@@ -58,14 +58,14 @@ When the Stack Manager installs the GCP stack, a few things will happen:
 
 * All CRDs related to GCP infrastructure and services will be installed to the cluster, such as `CloudSQLInstance`, `CloudSQLInstanceClass`, `GKECluster`, `GKEClusterClass`, `Network`, `Subnetwork`, etc.
 * A `ClusterRole` will be created at the cluster level that includes all of the RBAC rules for API groups, resources, and verbs that were specified in the `rbac.yaml` file from the stack.
-Because this is a `ClusterRole`, this can grant the given permissions to cluster-scoped resources and to namespaced resources across all namespaces.
-* A `ServiceAccount` is created in the namespace that the stack's controller will be running that will serve as the runtime identify of the controller.
+Because this is a `ClusterRole`, bindings to this role can grant the given permissions to cluster-scoped resources and to namespaced resources across all namespaces.
+* A `ServiceAccount` is created in the namespace that the stack's controller will be running.  This will serve as the runtime identify of the controller.
 * A `ClusterRoleBinding` is created at the cluster level to bind the `ClusterRole` and the namespaced `ServiceAccount`
 * A `Deployment` is created in the same namespace as the stack and it is expected to launch and manage the pod that hosts the GCP controllers.
 
 It is worth reiterating the scope of permissions that this platform stack has received:
 
-> Because the stack is given a `ClusterRole`, is can be granted permissions to cluster-scoped resources and to namespaced resources across all namespaces.
+> Because the stack is given a `ClusterRole`, it can be granted permissions to cluster-scoped resources and to namespaced resources across all namespaces.
 
 The diagram below summarizes the artifacts in the control plane after the GCP stack has been installed and a couple example `MySQLClaims` have been created.
 
@@ -73,7 +73,7 @@ The diagram below summarizes the artifacts in the control plane after the GCP st
 
 ### Environments
 
-While the platform stack is installed at the cluster level (there is only one instance of it), they can still support the concept of multiple "environments", each represented by a namespace.
+While platform stacks are installed at the cluster level (there is only one instance of each platform stack), they can still support the concept of multiple "environments", each represented by a namespace.
 For example, an admin can create a namespace to model their production "environment" and another namespace to model their development "environment".
 All resources within each of those environments can share a common set of provider credentials.
 This namespaced "environment" approach provides the administrator with a way to collect or aggregate all the infrastructure and services associated with a given environment.
