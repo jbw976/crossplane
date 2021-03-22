@@ -59,8 +59,8 @@ fi
 
 chmod +x kubectl-crossplane
 
-YELLOW_FOREGROUND=`tput setaf 3`
-RESET=`tput sgr0`
+YELLOW_FOREGROUND='\033[0;33m'
+RESET='\033[0m'
 
 echo "kubectl plugin downloaded successfully!"
 echo
