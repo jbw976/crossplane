@@ -134,14 +134,14 @@ spec:
             port: readyz
         ports:
         - name: readyz
-          containerPort: {{ .Values.readiness.port | default "8081" }}
+          containerPort: {{ .Values.readiness.port | default 8081 }}
         {{- if .Values.metrics.enabled }}
         - name: metrics
-          containerPort: {{ .Values.metrics.port | default "8080" }}
+          containerPort: {{ .Values.metrics.port | default 8080 }}
         {{- end }}
         {{- if .Values.webhooks.enabled }}
         - name: webhooks
-          containerPort: {{ .Values.webhooks.port | default "9443" }}
+          containerPort: {{ .Values.webhooks.port | default 9443 }}
         {{- end }}
         {{- with .Values.securityContextCrossplane }}
         securityContext:
