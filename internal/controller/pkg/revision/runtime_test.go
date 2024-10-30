@@ -518,8 +518,8 @@ func TestRuntimeManifestBuilderService(t *testing.T) {
 						Ports: []corev1.ServicePort{
 							{
 								Name:       grpcPortName,
-								Port:       int32(webhook.DefaultPort),
-								TargetPort: intstr.FromInt32(int32(webhook.DefaultPort)),
+								Port:       int32(servicePort),
+								TargetPort: intstr.FromInt32(int32(servicePort)),
 								Protocol:   corev1.ProtocolTCP,
 							},
 						},
