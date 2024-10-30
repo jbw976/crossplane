@@ -70,7 +70,7 @@ func serviceFromRuntimeConfig(tmpl *v1beta1.ServiceTemplate) *corev1.Service {
 	}
 
 	if meta := tmpl.Metadata; meta != nil {
-		if tmpl.Metadata.Name != nil {
+		if meta.Name != nil {
 			svc.Name = *meta.Name
 		}
 
