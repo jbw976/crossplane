@@ -483,6 +483,16 @@ func TestRuntimeManifestBuilderService(t *testing.T) {
 				serviceAccountName: providerRevisionName,
 				overrides: []ServiceOverride{
 					ServiceWithSelectors(providerSelectors(&pkgmetav1.Provider{ObjectMeta: metav1.ObjectMeta{Name: providerMetaName}}, providerRevision)),
+					ServiceWithAdditionalPorts([]corev1.ServicePort{
+						{
+							Name:       grpcPortName,
+							Protocol:   corev1.ProtocolTCP,
+							Port:       servicePort,
+							TargetPort: intstr.FromInt32(servicePort),
+						},
+					}),
+					// Ensure that the service port is always the default port, to prevent customization.
+					ServiceWithPort(grpcPortName, servicePort),
 				},
 			},
 			want: want{
@@ -507,7 +517,7 @@ func TestRuntimeManifestBuilderService(t *testing.T) {
 						},
 						Ports: []corev1.ServicePort{
 							{
-								Name:       webhookPortName,
+								Name:       grpcPortName,
 								Port:       int32(webhook.DefaultPort),
 								TargetPort: intstr.FromInt32(int32(webhook.DefaultPort)),
 								Protocol:   corev1.ProtocolTCP,
@@ -529,7 +539,7 @@ func TestRuntimeManifestBuilderService(t *testing.T) {
 								Spec: &corev1.ServiceSpec{
 									Ports: []corev1.ServicePort{
 										{
-											Name:       webhookPortName,
+											Name:       grpcPortName,
 											Port:       int32(7070), // we request a diverging service port
 											TargetPort: intstr.FromInt32(7070),
 											Protocol:   corev1.ProtocolTCP,
@@ -543,6 +553,16 @@ func TestRuntimeManifestBuilderService(t *testing.T) {
 				serviceAccountName: providerRevisionName,
 				overrides: []ServiceOverride{
 					ServiceWithSelectors(providerSelectors(&pkgmetav1.Provider{ObjectMeta: metav1.ObjectMeta{Name: providerMetaName}}, providerRevision)),
+					ServiceWithAdditionalPorts([]corev1.ServicePort{
+						{
+							Name:       grpcPortName,
+							Protocol:   corev1.ProtocolTCP,
+							Port:       servicePort,
+							TargetPort: intstr.FromInt32(servicePort),
+						},
+					}),
+					// Ensure that the service port is always the default port, to prevent customization.
+					ServiceWithPort(grpcPortName, servicePort),
 				},
 			},
 			want: want{
@@ -567,7 +587,7 @@ func TestRuntimeManifestBuilderService(t *testing.T) {
 						},
 						Ports: []corev1.ServicePort{
 							{
-								Name:       webhookPortName,
+								Name:       grpcPortName,
 								Port:       int32(webhook.DefaultPort), // but expect it to be the default
 								TargetPort: intstr.FromInt32(int32(7070)),
 								Protocol:   corev1.ProtocolTCP,

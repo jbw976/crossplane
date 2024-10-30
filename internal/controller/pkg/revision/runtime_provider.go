@@ -19,6 +19,7 @@ package revision
 import (
 	"context"
 	"fmt"
+	"k8s.io/apimachinery/pkg/util/intstr"
 
 	"github.com/google/go-containerregistry/pkg/name"
 	appsv1 "k8s.io/api/apps/v1"
@@ -98,7 +99,19 @@ func (h *ProviderHooks) Pre(ctx context.Context, pkg runtime.Object, pr v1.Packa
 	// post establish.
 	// As a rule of thumb, we create objects named after the package in the
 	// pre hook and objects named after the package revision in the post hook.
-	svc := build.Service(ServiceWithSelectors(providerSelectors(providerMeta, pr)))
+	svc := build.Service(
+		ServiceWithSelectors(providerSelectors(providerMeta, pr)),
+		ServiceWithAdditionalPorts([]corev1.ServicePort{
+			{
+				Name:       webhookPortName,
+				Protocol:   corev1.ProtocolTCP,
+				Port:       servicePort,
+				TargetPort: intstr.FromInt32(servicePort),
+			},
+		}),
+		// Ensure that the service port is always the default port, to prevent customization.
+		ServiceWithPort(webhookPortName, servicePort))
+
 	if err := h.client.Apply(ctx, svc); err != nil {
 		return errors.Wrap(err, errApplyProviderService)
 	}

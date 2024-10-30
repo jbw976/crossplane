@@ -19,6 +19,7 @@ package revision
 import (
 	"context"
 	"fmt"
+	"k8s.io/apimachinery/pkg/util/intstr"
 
 	"github.com/google/go-containerregistry/pkg/name"
 	appsv1 "k8s.io/api/apps/v1"
@@ -211,6 +212,16 @@ func functionServiceOverrides() []ServiceOverride {
 		// FunctionComposer) can load balance across the endpoints.
 		// https://kubernetes.io/docs/concepts/services-networking/service/#headless-services
 		ServiceWithClusterIP(corev1.ClusterIPNone),
+		ServiceWithAdditionalPorts([]corev1.ServicePort{
+			{
+				Name:       grpcPortName,
+				Protocol:   corev1.ProtocolTCP,
+				Port:       servicePort,
+				TargetPort: intstr.FromInt32(servicePort),
+			},
+		}),
+		// Ensure that the service port is always the default port, to prevent customization.
+		ServiceWithPort(grpcPortName, servicePort),
 	}
 }
 

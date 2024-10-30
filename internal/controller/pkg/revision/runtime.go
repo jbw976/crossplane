@@ -17,14 +17,12 @@ limitations under the License.
 package revision
 
 import (
+	"github.com/crossplane/crossplane-runtime/pkg/meta"
 	"golang.org/x/net/context"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/util/intstr"
-
-	"github.com/crossplane/crossplane-runtime/pkg/meta"
 
 	v1 "github.com/crossplane/crossplane/apis/pkg/v1"
 	"github.com/crossplane/crossplane/apis/pkg/v1alpha1"
@@ -270,17 +268,7 @@ func (b *RuntimeManifestBuilder) Service(overrides ...ServiceOverride) *corev1.S
 		// Overrides that we are opinionated about.
 		ServiceWithNamespace(b.namespace),
 		ServiceWithOwnerReferences([]metav1.OwnerReference{meta.AsController(meta.TypedReferenceTo(b.revision, b.revision.GetObjectKind().GroupVersionKind()))}),
-		ServiceWithSelectors(b.podSelectors()),
-		ServiceWithAdditionalPorts([]corev1.ServicePort{
-			{
-				Name:       webhookPortName,
-				Protocol:   corev1.ProtocolTCP,
-				Port:       servicePort,
-				TargetPort: intstr.FromInt32(servicePort),
-			},
-		}),
-		// Ensure that the service port is always the default port, to prevent customization.
-		ServiceWithPort(webhookPortName, servicePort))
+		ServiceWithSelectors(b.podSelectors()))
 
 	// We append the overrides passed to the function last so that they can
 	// override the above ones.
