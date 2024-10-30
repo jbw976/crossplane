@@ -224,7 +224,7 @@ func DeploymentRuntimeWithAdditionalEnvironments(env []corev1.EnvVar) Deployment
 }
 
 // DeploymentRuntimeWithAdditionalPorts adds additional ports to the runtime
-// container of a Deployment. Ports are added only if not port of the same name exists.
+// container of a Deployment. A port will be added only if a port of the same name doesn't already exist.
 func DeploymentRuntimeWithAdditionalPorts(ports []corev1.ContainerPort) DeploymentOverride {
 	return func(d *appsv1.Deployment) {
 		names := make(map[string]bool)
