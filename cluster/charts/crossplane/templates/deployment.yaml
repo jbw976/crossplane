@@ -183,12 +183,12 @@ spec:
             value: "{{ .Values.webhooks.port }}"
           {{- end}}
           {{- if and .Values.metrics.enabled .Values.metrics.port }}
-          - name: "METRICS_BIND_ADDRESS"
-            value: ":{{ .Values.metrics.port }}"
+          - name: "METRICS_PORT"
+            value: "{{ .Values.metrics.port }}"
           {{- end}}
           {{- if .Values.readiness.port }}
-          - name: "HEALTH_PROBE_BIND_ADDRESS"
-            value: ":{{ .Values.readiness.port }}"
+          - name: "HEALTH_PROBE_PORT"
+            value: "{{ .Values.readiness.port }}"
           {{- end}}
           - name: "TLS_SERVER_SECRET_NAME"
             value: crossplane-tls-server

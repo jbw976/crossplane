@@ -105,9 +105,9 @@ type startCommand struct {
 	WebhookEnabled bool `default:"true" env:"WEBHOOK_ENABLED" help:"Enable webhook configuration."`
 	WebhookPort    int  `default:"9443" env:"WEBHOOK_PORT"    help:"The port the webhook server listens on."`
 
-	MetricsBindAddress string `default:":8080" env:"METRICS_BIND_ADDRESS" help:"The address the metrics server listens on." placeholder:"host:port"`
+	MetricsPort int `default:"8080" env:"METRICS_PORT" help:"The port the metrics server listens on."`
 
-	HealthProbeBindAddress string `default:":8081" env:"HEALTH_PROBE_BIND_ADDRESS" help:"The address the health probe endpoint binds to." placeholder:"host:port"`
+	HealthProbePort int `default:"8081" env:"HEALTH_PROBE_PORT" help:"The port the health probe endpoint listens on."`
 
 	TLSServerSecretName string `env:"TLS_SERVER_SECRET_NAME" help:"The name of the TLS Secret that will store Crossplane's server certificate."`
 	TLSServerCertsDir   string `env:"TLS_SERVER_CERTS_DIR"   help:"The path of the folder which will store TLS server certificate of Crossplane."`
@@ -174,7 +174,7 @@ func (c *startCommand) Run(s *runtime.Scheme, log logging.Logger) error { //noli
 		EventBroadcaster: eb,
 
 		Metrics: metricsserver.Options{
-			BindAddress: c.MetricsBindAddress,
+			BindAddress: fmt.Sprintf(":%d", c.MetricsPort),
 		},
 
 		// controller-runtime uses both ConfigMaps and Leases for leader
@@ -192,7 +192,7 @@ func (c *startCommand) Run(s *runtime.Scheme, log logging.Logger) error { //noli
 		RenewDeadline:                 func() *time.Duration { d := 50 * time.Second; return &d }(),
 
 		PprofBindAddress:       c.Profile,
-		HealthProbeBindAddress: c.HealthProbeBindAddress,
+		HealthProbeBindAddress: fmt.Sprintf(":%d", c.HealthProbePort),
 	})
 	if err != nil {
 		return errors.Wrap(err, "cannot create manager")
