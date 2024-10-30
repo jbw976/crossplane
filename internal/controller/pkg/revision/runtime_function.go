@@ -98,7 +98,7 @@ func (h *FunctionHooks) Pre(ctx context.Context, _ runtime.Object, pr v1.Package
 
 	endpointPort := servicePort
 	for _, port := range svc.Spec.Ports {
-		if port.Name == webhookPortName {
+		if port.Name == grpcPortName {
 			portAsInt := port.TargetPort.IntValue()
 			if portAsInt == 0 {
 				return errors.Errorf("cannot determine target port of service from value %s", port.TargetPort.String())
