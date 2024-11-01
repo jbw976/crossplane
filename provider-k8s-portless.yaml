@@ -1,0 +1,8 @@
+# K8s provider
+apiVersion: pkg.crossplane.io/v1
+kind: Provider
+metadata:
+  name: provider-kubernetes
+spec:
+  package: "xpkg.upbound.io/jaredorg/provider-kubernetes-portconfig:v0.0.3"
+  ignoreCrossplaneConstraints: true

@@ -1,0 +1,35 @@
+# K8s provider
+apiVersion: pkg.crossplane.io/v1
+kind: Provider
+metadata:
+  name: provider-kubernetes
+spec:
+  package: "xpkg.upbound.io/jaredorg/provider-kubernetes-portconfig:v0.0.3"
+  ignoreCrossplaneConstraints: true
+  runtimeConfigRef:
+    name: provider-kubernetes
+---
+apiVersion: pkg.crossplane.io/v1beta1
+kind: DeploymentRuntimeConfig
+metadata:
+  name: provider-kubernetes
+spec:
+  deploymentTemplate:
+    spec:
+      selector: { }
+      template:
+        spec:
+          hostNetwork: true
+          dnsPolicy: ClusterFirstWithHostNet
+          containers:
+            - name: package-runtime
+              args:
+                - --webhook-port=9610
+                - --metrics-bind-address=:9611
+              ports:
+                - containerPort: 9610
+                  name: webhook
+                  protocol: TCP
+                - containerPort: 9611
+                  name: metrics
+                  protocol: TCP
