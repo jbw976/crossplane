@@ -1,0 +1,32 @@
+apiVersion: pkg.crossplane.io/v1beta1
+kind: Function
+metadata:
+  name: function-patch-and-transform
+spec:
+  package: xpkg.upbound.io/crossplane-contrib/function-patch-and-transform:v0.7.0
+  ignoreCrossplaneConstraints: true
+  runtimeConfigRef:
+    name: function-patch-and-transform
+---
+apiVersion: pkg.crossplane.io/v1beta1
+kind: DeploymentRuntimeConfig
+metadata:
+  name: function-patch-and-transform
+spec:
+  deploymentTemplate:
+    spec:
+      selector: { }
+      template:
+        spec:
+          hostNetwork: true
+          containers:
+            - name: package-runtime
+              args:
+                - --address=:9612
+  serviceTemplate:
+    spec:
+      ports:
+        - name: webhook
+          port: 9200 # doesn't matter
+          targetPort: 9612
+          protocol: TCP

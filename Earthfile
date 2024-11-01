@@ -89,7 +89,9 @@ hack:
       .hack/kind load docker-image --name crossplane-hack crossplane-hack/crossplane:hack && \
       .hack/helm install --create-namespace --namespace crossplane-system crossplane .hack/charts/crossplane-0.0.0-hack.tgz \
         --set "image.pullPolicy=Never,image.repository=crossplane-hack/crossplane,image.tag=hack" \
-        --set "args={--debug}"
+        # --set "args={--debug}"
+        --set "args={--debug}" \
+        --set "hostNetwork=true,dnsPolicy=ClusterFirstWithHostNet,webhooks.port=9600,metrics.enabled=true,metrics.port=9601,readiness.port=9602"
   END
   RUN docker image rm crossplane-hack/crossplane:hack
   RUN rm -rf .hack
