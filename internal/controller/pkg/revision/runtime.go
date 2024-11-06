@@ -43,6 +43,7 @@ const (
 
 	// See https://github.com/grpc/grpc/blob/v1.58.0/doc/naming.md
 	grpcPortName       = "grpc"
+	grpcPort           = 9443
 	servicePort        = 9443
 	serviceEndpointFmt = "dns:///%s.%s:%d"
 

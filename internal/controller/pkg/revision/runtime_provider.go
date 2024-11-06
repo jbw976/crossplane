@@ -20,7 +20,6 @@ import (
 	"context"
 	"fmt"
 
-
 	"github.com/google/go-containerregistry/pkg/name"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -107,11 +106,10 @@ func (h *ProviderHooks) Pre(ctx context.Context, pkg runtime.Object, pr v1.Packa
 				Name:       webhookPortName,
 				Protocol:   corev1.ProtocolTCP,
 				Port:       servicePort,
-				TargetPort: intstr.FromInt32(servicePort),
+				TargetPort: intstr.FromString(webhookPortName),
 			},
 		}),
-		// Ensure that the service port is always the default port, to prevent customization.
-		ServiceWithPort(webhookPortName, servicePort))
+	)
 
 	if err := h.client.Apply(ctx, svc); err != nil {
 		return errors.Wrap(err, errApplyProviderService)

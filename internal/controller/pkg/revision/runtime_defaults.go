@@ -78,9 +78,5 @@ func serviceFromRuntimeConfig(tmpl *v1beta1.ServiceTemplate) *corev1.Service {
 		svc.Labels = meta.Labels
 	}
 
-	if spec := tmpl.Spec; spec != nil {
-		svc.Spec = *spec
-	}
-
 	return svc
 }

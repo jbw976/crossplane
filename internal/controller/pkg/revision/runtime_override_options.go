@@ -427,18 +427,6 @@ func ServiceWithAdditionalPorts(ports []corev1.ServicePort) ServiceOverride {
 	}
 }
 
-// ServiceWithPort ensures that a service that has a port with the given portName has the given servicePort.
-func ServiceWithPort(portName string, servicePort int) ServiceOverride {
-	return func(s *corev1.Service) {
-		for i, p := range s.Spec.Ports {
-			if p.Name == portName {
-				s.Spec.Ports[i].Port = int32(servicePort)
-				return
-			}
-		}
-	}
-}
-
 // ServiceWithClusterIP overrides the cluster IP of a Service.
 func ServiceWithClusterIP(clusterIP string) ServiceOverride {
 	return func(s *corev1.Service) {

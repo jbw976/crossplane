@@ -26,7 +26,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/utils/ptr"
-	"sigs.k8s.io/controller-runtime/pkg/webhook"
 
 	pkgmetav1 "github.com/crossplane/crossplane/apis/pkg/meta/v1"
 	v1 "github.com/crossplane/crossplane/apis/pkg/v1"
@@ -488,11 +487,9 @@ func TestRuntimeManifestBuilderService(t *testing.T) {
 							Name:       grpcPortName,
 							Protocol:   corev1.ProtocolTCP,
 							Port:       servicePort,
-							TargetPort: intstr.FromInt32(servicePort),
+							TargetPort: intstr.FromString(grpcPortName),
 						},
 					}),
-					// Ensure that the service port is always the default port, to prevent customization.
-					ServiceWithPort(grpcPortName, servicePort),
 				},
 			},
 			want: want{
@@ -519,77 +516,7 @@ func TestRuntimeManifestBuilderService(t *testing.T) {
 							{
 								Name:       grpcPortName,
 								Port:       int32(servicePort),
-								TargetPort: intstr.FromInt32(int32(servicePort)),
-								Protocol:   corev1.ProtocolTCP,
-							},
-						},
-					},
-				},
-			},
-		},
-		"ProviderServiceWithRuntimeConfig": {
-			reason: "Baseline provided by the runtime config should be applied to the service",
-			args: args{
-				builder: &RuntimeManifestBuilder{
-					revision:  providerRevision,
-					namespace: namespace,
-					runtimeConfig: &v1beta1.DeploymentRuntimeConfig{
-						Spec: v1beta1.DeploymentRuntimeConfigSpec{
-							ServiceTemplate: &v1beta1.ServiceTemplate{
-								Spec: &corev1.ServiceSpec{
-									Ports: []corev1.ServicePort{
-										{
-											Name:       grpcPortName,
-											Port:       int32(7070), // we request a diverging service port
-											TargetPort: intstr.FromInt32(7070),
-											Protocol:   corev1.ProtocolTCP,
-										},
-									},
-								},
-							},
-						},
-					},
-				},
-				serviceAccountName: providerRevisionName,
-				overrides: []ServiceOverride{
-					ServiceWithSelectors(providerSelectors(&pkgmetav1.Provider{ObjectMeta: metav1.ObjectMeta{Name: providerMetaName}}, providerRevision)),
-					ServiceWithAdditionalPorts([]corev1.ServicePort{
-						{
-							Name:       grpcPortName,
-							Protocol:   corev1.ProtocolTCP,
-							Port:       servicePort,
-							TargetPort: intstr.FromInt32(servicePort),
-						},
-					}),
-					// Ensure that the service port is always the default port, to prevent customization.
-					ServiceWithPort(grpcPortName, servicePort),
-				},
-			},
-			want: want{
-				want: &corev1.Service{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      providerName,
-						Namespace: namespace,
-						OwnerReferences: []metav1.OwnerReference{
-							{
-								APIVersion:         "pkg.crossplane.io/v1",
-								Kind:               "ProviderRevision",
-								Name:               providerRevisionName,
-								Controller:         ptr.To(true),
-								BlockOwnerDeletion: ptr.To(true),
-							},
-						},
-					},
-					Spec: corev1.ServiceSpec{
-						Selector: map[string]string{
-							"pkg.crossplane.io/provider": providerMetaName,
-							"pkg.crossplane.io/revision": providerRevisionName,
-						},
-						Ports: []corev1.ServicePort{
-							{
-								Name:       grpcPortName,
-								Port:       int32(webhook.DefaultPort), // but expect it to be the default
-								TargetPort: intstr.FromInt32(int32(7070)),
+								TargetPort: intstr.FromString(grpcPortName),
 								Protocol:   corev1.ProtocolTCP,
 							},
 						},

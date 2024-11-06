@@ -20,7 +20,6 @@ import (
 	"context"
 	"fmt"
 
-
 	"github.com/google/go-containerregistry/pkg/name"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -97,18 +96,7 @@ func (h *FunctionHooks) Pre(ctx context.Context, _ runtime.Object, pr v1.Package
 		return errors.Errorf("cannot apply function package hooks to %T", pr)
 	}
 
-	endpointPort := servicePort
-	for _, port := range svc.Spec.Ports {
-		if port.Name == grpcPortName {
-			portAsInt := port.TargetPort.IntValue()
-			if portAsInt == 0 {
-				return errors.Errorf("cannot determine target port of service from value %s", port.TargetPort.String())
-			}
-			endpointPort = portAsInt
-		}
-	}
-
-	fRev.Status.Endpoint = fmt.Sprintf(serviceEndpointFmt, svc.Name, svc.Namespace, endpointPort)
+	fRev.Status.Endpoint = fmt.Sprintf(serviceEndpointFmt, svc.Name, svc.Namespace, grpcPort)
 
 	secServer := build.TLSServerSecret()
 	if err := h.client.Apply(ctx, secServer); err != nil {
@@ -197,7 +185,7 @@ func functionDeploymentOverrides(image string) []DeploymentOverride {
 		DeploymentRuntimeWithAdditionalPorts([]corev1.ContainerPort{
 			{
 				Name:          grpcPortName,
-				ContainerPort: servicePort,
+				ContainerPort: grpcPort,
 			},
 		}),
 	}
@@ -217,12 +205,10 @@ func functionServiceOverrides() []ServiceOverride {
 			{
 				Name:       grpcPortName,
 				Protocol:   corev1.ProtocolTCP,
-				Port:       servicePort,
-				TargetPort: intstr.FromInt32(servicePort),
+				Port:       grpcPort,
+				TargetPort: intstr.FromString(grpcPortName),
 			},
 		}),
-		// Ensure that the service port is always the default port, to prevent customization.
-		ServiceWithPort(grpcPortName, servicePort),
 	}
 }
 
