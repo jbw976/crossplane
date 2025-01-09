@@ -88,7 +88,6 @@ type UsageStatus struct {
 // Read the Crossplane documentation for
 // [more information about Compositions](https://docs.crossplane.io/latest/concepts/usages).
 // +kubebuilder:object:root=true
-// +kubebuilder:storageversion
 // +genclient
 // +genclient:nonNamespaced
 // +kubebuilder:printcolumn:name="DETAILS",type="string",JSONPath=".metadata.annotations.crossplane\\.io/usage-details"
