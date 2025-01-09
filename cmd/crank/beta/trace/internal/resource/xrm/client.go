@@ -29,7 +29,6 @@ import (
 	"github.com/crossplane/crossplane-runtime/pkg/resource/unstructured/claim"
 	"github.com/crossplane/crossplane-runtime/pkg/resource/unstructured/composite"
 
-	"github.com/crossplane/crossplane/apis/apiextensions/v1alpha1"
 	"github.com/crossplane/crossplane/apis/apiextensions/v1beta1"
 	"github.com/crossplane/crossplane/cmd/crank/beta/trace/internal/resource"
 )
@@ -105,7 +104,7 @@ func getResourceChildrenRefs(r *resource.Resource, getConnectionSecrets bool) []
 
 	switch obj.GroupVersionKind().GroupKind() {
 	case schema.GroupKind{Group: "", Kind: "Secret"},
-		v1alpha1.UsageGroupVersionKind.GroupKind(),
+		v1beta1.UsageGroupVersionKind.GroupKind(),
 		v1beta1.EnvironmentConfigGroupVersionKind.GroupKind():
 		// nothing to do here, it's a resource we know not to have any reference
 		return nil
