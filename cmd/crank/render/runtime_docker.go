@@ -148,6 +148,28 @@ func GetDockerCleanup(fn pkgv1.Function) (DockerCleanup, error) {
 	}
 }
 
+func getConfigFile() (*configfile.ConfigFile, error) {
+	// If a podman config file doesn't exist under XDG_RUNTIME_DIR, just use the default Docker config file
+	podmanConfigPath := filepath.Clean(filepath.Join(os.Getenv("XDG_RUNTIME_DIR"), "containers/auth.json"))
+	if _, err := os.Stat(podmanConfigPath); err != nil {
+		return config.LoadDefaultConfigFile(os.Stderr), nil
+	}
+
+	// Try to open and read the podman config file
+	f, err := os.Open(podmanConfigPath)
+	if err != nil {
+		return nil, errors.Wrapf(err, "cannot open podman config file %q", podmanConfigPath)
+	}
+	defer f.Close() //nolint:errcheck // Only open for reading.
+
+	configFile, err := config.LoadFromReader(f)
+	if err != nil {
+		return nil, errors.Wrapf(err, "cannot load/read podman config file %q", podmanConfigPath)
+	}
+
+	return configFile, nil
+}
+
 // GetRuntimeDocker extracts RuntimeDocker configuration from the supplied
 // Function.
 func GetRuntimeDocker(fn pkgv1.Function, log logging.Logger) (*RuntimeDocker, error) {
@@ -163,23 +185,9 @@ func GetRuntimeDocker(fn pkgv1.Function, log logging.Logger) (*RuntimeDocker, er
 		return nil, errors.Wrapf(err, "cannot get pull policy for Function %q", fn.GetName())
 	}
 
-	// Initial ConfigFile, first check environment variable XDG_RUNTIME_DIR for Podman if it exists
-	// Otherwise, use the default Docker config file
-	var configFile *configfile.ConfigFile
-	if _, err := os.Stat(filepath.Join(os.Getenv("XDG_RUNTIME_DIR"), "containers/auth.json")); err == nil {
-		// Use the auth.json file if specified XDG_RUNTIME_DIR and file exists
-		f, err := os.Open(filepath.Join(os.Getenv("XDG_RUNTIME_DIR"), "containers/auth.json"))
-		if err != nil {
-			return nil, errors.Wrapf(err, "cannot open file %s", filepath.Join(os.Getenv("XDG_RUNTIME_DIR"), "containers/auth.json"))
-		}
-		defer f.Close() //nolint:errcheck // Only open for reading.
-
-		configFile, err = config.LoadFromReader(f)
-		if err != nil {
-			return nil, errors.Wrapf(err, "cannot load config file from reader")
-		}
-	} else {
-		configFile = config.LoadDefaultConfigFile(os.Stderr)
+	configFile, err := getConfigFile()
+	if err != nil {
+		return nil, errors.Wrapf(err, "cannot get config file for Function %q", fn.GetName())
 	}
 
 	r := &RuntimeDocker{
