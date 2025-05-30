@@ -363,7 +363,8 @@ jobs:
         run: echo "EARTHLY_MAX_REMOTE_CACHE=true" >> $GITHUB_ENV
 
       - name: Configure Earthly to Push Artifacts
-        if: (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/v2' || startsWith(github.ref, 'refs/heads/release-')) && env.DOCKER_USR != '' && env.UPBOUND_MARKETPLACE_PUSH_ROBOT_USR != '' && env.ORACLE_USR != ''
+        # TODO: restore this check before merging!
+        if: (github.ref == 'refs/heads/oci-buckets' || github.ref == 'refs/heads/main' || github.ref == 'refs/heads/v2' || startsWith(github.ref, 'refs/heads/release-')) && env.ORACLE_USR != ''
         run: echo "EARTHLY_PUSH=true" >> $GITHUB_ENV
 
       - name: Set CROSSPLANE_VERSION GitHub Environment Variable
