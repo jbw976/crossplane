@@ -17,17 +17,16 @@ limitations under the License.
 // Package xpkg contains Crossplane packaging commands.
 package xpkg
 
-// TODO(lsviben) add the rest of the commands from up (batch, xpextract).
-
 // Cmd contains commands for interacting with xpkgs.
 type Cmd struct {
 	// Keep subcommands sorted alphabetically.
 	Build   buildCmd   `cmd:"" help:"Build a new package."`
+	Batch   batchCmd   `cmd:"" help:"Build and push multiple packages together in a single batch."`
+	Extract extractCmd `cmd:"" help:"Extract package contents into a Crossplane cache compatible format. Fetches from a remote registry by default."`
 	Init    initCmd    `cmd:"" help:"Initialize a new package from a template."`
 	Install installCmd `cmd:"" help:"Install a package in a control plane."`
 	Push    pushCmd    `cmd:"" help:"Push a package to a registry."`
 	Update  updateCmd  `cmd:"" help:"Update a package in a control plane."`
-	Extract extractCmd `cmd:"" help:"Extract package contents into a Crossplane cache compatible format. Fetches from a remote registry by default."`
 }
 
 // Help prints out the help for the xpkg command.

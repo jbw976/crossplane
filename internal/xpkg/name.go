@@ -55,9 +55,19 @@ const (
 	PackageAnnotation string = "base"
 
 	// ExamplesAnnotation is the annotation value used for the examples.yaml
-	// layer.
+	// layer. This value is preserved for backwards compatibility.
 	// TODO(lsviben) Consider changing this to "examples".
 	ExamplesAnnotation string = "upbound"
+
+	// AuthMetaAnnotation is the annotation used for authentication information
+	// in a package'a metadata. This value is preserved for backwards
+	// compatibility.
+	AuthMetaAnnotation = "auth.upbound.io/group"
+
+	// AuthObjectAnnotation is the annotation used for authentication
+	// information on objects. This value is preserved for backwards
+	// compatibility.
+	AuthObjectAnnotation = "auth.upbound.io/config"
 
 	// DefaultRegistry is the registry name that will be used when no registry
 	// is provided.

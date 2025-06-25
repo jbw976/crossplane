@@ -203,6 +203,6 @@ func (c *extractCmd) Run(logger logging.Logger) error { //nolint:gocyclo // xpkg
 		return errors.Wrap(err, errExtractPackageContents)
 	}
 
-	logger.Debug("xpkg contents extracted to %s", out)
+	logger.Debug("xpkg contents extracted", "path", out)
 	return nil
 }

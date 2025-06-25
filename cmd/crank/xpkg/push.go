@@ -47,11 +47,11 @@ const (
 
 	errFmtNewTag        = "failed to parse package tag %q"
 	errFmtReadPackage   = "failed to read package file %s"
-	errFmtPushPackage   = "failed to push package file %s"
-	errFmtGetDigest     = "failed to get digest of package file %s"
-	errFmtNewDigest     = "failed to parse digest %q for package file %s"
-	errFmtGetMediaType  = "failed to get media type of package file %s"
-	errFmtGetConfigFile = "failed to get OCI config file of package file %s"
+	errFmtPushPackage   = "failed to push package file"
+	errFmtGetDigest     = "failed to get digest of package file"
+	errFmtNewDigest     = "failed to parse digest %q for package file"
+	errFmtGetMediaType  = "failed to get media type of package file"
+	errFmtGetConfigFile = "failed to get OCI config file of package file"
 	errFmtWriteIndex    = "failed to push an OCI image index of %d packages"
 )
 
@@ -92,11 +92,6 @@ func (c *pushCmd) AfterApply() error {
 
 // Run runs the push cmd.
 func (c *pushCmd) Run(logger logging.Logger) error { //nolint:gocognit // This feels easier to read as-is.
-	tag, err := name.NewTag(c.Package, name.WithDefaultRegistry(xpkg.DefaultRegistry))
-	if err != nil {
-		return errors.Wrapf(err, errFmtNewTag, c.Package)
-	}
-
 	// If package is not defined, attempt to find single package in current
 	// directory.
 	if len(c.PackageFiles) == 0 {
@@ -112,6 +107,15 @@ func (c *pushCmd) Run(logger logging.Logger) error { //nolint:gocognit // This f
 		logger.Debug("Found package in directory", "path", path)
 	}
 
+	images := make([]v1.Image, 0, len(c.PackageFiles))
+	for _, p := range c.PackageFiles {
+		img, err := tarball.ImageFromPath(filepath.Clean(p), nil)
+		if err != nil {
+			return err
+		}
+		images = append(images, img)
+	}
+
 	t := &http.Transport{
 		TLSClientConfig: &tls.Config{
 			InsecureSkipVerify: c.InsecureSkipTLSVerify, //nolint:gosec // we need to support insecure connections if requested
@@ -123,35 +127,42 @@ func (c *pushCmd) Run(logger logging.Logger) error { //nolint:gocognit // This f
 		remote.WithTransport(t),
 	}
 
-	// If there's only one package file, handle the simple path.
-	if len(c.PackageFiles) == 1 {
-		img, err := tarball.ImageFromPath(c.PackageFiles[0], nil)
-		if err != nil {
-			return errors.Wrapf(err, errFmtReadPackage, c.PackageFiles[0])
+	return PushImages(logger, images, c.Package, options)
+}
+
+func PushImages(logger logging.Logger, images []v1.Image, url string, options []remote.Option) error {
+	if len(options) == 0 {
+		options = []remote.Option{
+			remote.WithAuthFromKeychain(authn.DefaultKeychain),
 		}
+	}
+
+	tag, err := name.NewTag(url, name.StrictValidation)
+	if err != nil {
+		return errors.Wrapf(err, errFmtNewTag, url)
+	}
+
+	// If there's only one package file, handle the simple path.
+	if len(images) == 1 {
+		img := images[0]
 		img, err = xpkg.AnnotateLayers(img)
 		if err != nil {
 			return errors.Wrapf(err, errAnnotateLayers)
 		}
 		if err := remote.Write(tag, img, options...); err != nil {
-			return errors.Wrapf(err, errFmtPushPackage, c.PackageFiles[0])
+			return errors.Wrapf(err, errFmtPushPackage)
 		}
-		logger.Debug("Pushed package", "path", c.PackageFiles[0], "ref", tag.String())
+		logger.Debug("Pushed package", "path", img, "ref", tag.String())
 		return nil
 	}
 
 	// If there's more than one package file we'll write (push) them all by
 	// their digest, and create an index with the specified tag. This pattern is
 	// typically used to create a multi-platform image.
-	adds := make([]mutate.IndexAddendum, len(c.PackageFiles))
+	adds := make([]mutate.IndexAddendum, len(images))
 	g, ctx := errgroup.WithContext(context.Background())
-	for i, file := range c.PackageFiles {
+	for i, img := range images {
 		g.Go(func() error {
-			img, err := tarball.ImageFromPath(filepath.Clean(file), nil)
-			if err != nil {
-				return errors.Wrapf(err, errFmtReadPackage, file)
-			}
-
 			img, err = xpkg.AnnotateLayers(img)
 			if err != nil {
 				return errors.Wrapf(err, errAnnotateLayers)
@@ -159,22 +170,22 @@ func (c *pushCmd) Run(logger logging.Logger) error { //nolint:gocognit // This f
 
 			d, err := img.Digest()
 			if err != nil {
-				return errors.Wrapf(err, errFmtGetDigest, file)
+				return errors.Wrapf(err, errFmtGetDigest)
 			}
 			n := fmt.Sprintf("%s@%s", tag.Repository.Name(), d.String())
 			ref, err := name.NewDigest(n, name.WithDefaultRegistry(xpkg.DefaultRegistry))
 			if err != nil {
-				return errors.Wrapf(err, errFmtNewDigest, n, file)
+				return errors.Wrapf(err, errFmtNewDigest, n)
 			}
 
 			mt, err := img.MediaType()
 			if err != nil {
-				return errors.Wrapf(err, errFmtGetMediaType, file)
+				return errors.Wrapf(err, errFmtGetMediaType)
 			}
 
 			conf, err := img.ConfigFile()
 			if err != nil {
-				return errors.Wrapf(err, errFmtGetConfigFile, file)
+				return errors.Wrapf(err, errFmtGetConfigFile)
 			}
 
 			adds[i] = mutate.IndexAddendum{
@@ -189,9 +200,9 @@ func (c *pushCmd) Run(logger logging.Logger) error { //nolint:gocognit // This f
 				},
 			}
 			if err := remote.Write(ref, img, append(options, remote.WithContext(ctx))...); err != nil {
-				return errors.Wrapf(err, errFmtPushPackage, file)
+				return errors.Wrapf(err, errFmtPushPackage)
 			}
-			logger.Debug("Pushed package", "path", file, "ref", ref.String())
+			logger.Debug("Pushed package", "ref", ref.String())
 			return nil
 		})
 	}

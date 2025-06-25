@@ -78,6 +78,7 @@ func (c *buildCmd) AfterApply() error {
 					buildFilters(root, c.Ignore),
 					xpkg.SkipContains(c.ExamplesRoot))...),
 		),
+		nil,
 		parser.NewFsBackend(
 			c.fs,
 			parser.FsDir(ex),
