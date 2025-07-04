@@ -50,7 +50,7 @@ import (
 	"github.com/crossplane/crossplane/internal/controller/pkg/controller"
 	internaldag "github.com/crossplane/crossplane/internal/dag"
 	"github.com/crossplane/crossplane/internal/features"
-	"github.com/crossplane/crossplane/internal/xpkg"
+	"github.com/crossplane/crossplane/pkg/xpkg"
 )
 
 const (

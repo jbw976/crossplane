@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/crossplane/crossplane/apis/pkg/v1beta1"
-	"github.com/crossplane/crossplane/internal/xpkg"
+	"github.com/crossplane/crossplane/pkg/xpkg"
 )
 
 var _ xpkg.ConfigStore = &MockConfigStore{}

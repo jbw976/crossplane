@@ -32,9 +32,9 @@ import (
 	"github.com/crossplane/crossplane-runtime/pkg/logging"
 	"github.com/crossplane/crossplane-runtime/pkg/parser"
 
-	"github.com/crossplane/crossplane/internal/xpkg"
-	"github.com/crossplane/crossplane/internal/xpkg/parser/examples"
-	"github.com/crossplane/crossplane/internal/xpkg/parser/yaml"
+	"github.com/crossplane/crossplane/pkg/xpkg"
+	"github.com/crossplane/crossplane/pkg/xpkg/parser/examples"
+	"github.com/crossplane/crossplane/pkg/xpkg/parser/yaml"
 )
 
 const (
@@ -76,14 +76,14 @@ func (c *buildCmd) AfterApply() error {
 			parser.FsDir(root),
 			parser.FsFilters(
 				append(
-					buildFilters(root, c.Ignore),
+					BuildFilters(root, c.Ignore),
 					xpkg.SkipContains(c.ExamplesRoot))...),
 		),
 		parser.NewFsBackend(
 			c.fs,
 			parser.FsDir(ex),
 			parser.FsFilters(
-				buildFilters(ex, c.Ignore)...),
+				BuildFilters(ex, c.Ignore)...),
 		),
 		pp,
 		examples.New(),
@@ -209,9 +209,9 @@ func (c *buildCmd) Run(logger logging.Logger) error {
 	return nil
 }
 
-// default build filters skip directories, empty files, and files without YAML
-// extension in addition to any paths specified.
-func buildFilters(root string, skips []string) []parser.FilterFn {
+// BuildFilters provides the default build filters skip directories, empty
+// files, and files without YAML extension in addition to any paths specified.
+func BuildFilters(root string, skips []string) []parser.FilterFn {
 	defaultFns := []parser.FilterFn{
 		parser.SkipDirs(),
 		parser.SkipNotYAML(),

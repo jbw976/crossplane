@@ -48,8 +48,8 @@ import (
 	v1 "github.com/crossplane/crossplane/apis/pkg/v1"
 	"github.com/crossplane/crossplane/internal/features"
 	verfake "github.com/crossplane/crossplane/internal/version/fake"
-	"github.com/crossplane/crossplane/internal/xpkg"
-	xpkgfake "github.com/crossplane/crossplane/internal/xpkg/fake"
+	"github.com/crossplane/crossplane/pkg/xpkg"
+	xpkgfake "github.com/crossplane/crossplane/pkg/xpkg/fake"
 )
 
 var _ parser.Backend = &ErrBackend{}

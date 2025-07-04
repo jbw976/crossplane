@@ -64,7 +64,7 @@ import (
 	usagehook "github.com/crossplane/crossplane/internal/webhook/protection/usage"
 	"github.com/crossplane/crossplane/internal/xfn"
 	"github.com/crossplane/crossplane/internal/xfn/cached"
-	"github.com/crossplane/crossplane/internal/xpkg"
+	"github.com/crossplane/crossplane/pkg/xpkg"
 )
 
 // Command runs the core crossplane controllers.

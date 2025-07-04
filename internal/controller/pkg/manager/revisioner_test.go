@@ -30,8 +30,8 @@ import (
 	"github.com/crossplane/crossplane-runtime/pkg/test"
 
 	v1 "github.com/crossplane/crossplane/apis/pkg/v1"
-	"github.com/crossplane/crossplane/internal/xpkg"
-	"github.com/crossplane/crossplane/internal/xpkg/fake"
+	"github.com/crossplane/crossplane/pkg/xpkg"
+	"github.com/crossplane/crossplane/pkg/xpkg/fake"
 )
 
 func TestPackageRevisioner(t *testing.T) {

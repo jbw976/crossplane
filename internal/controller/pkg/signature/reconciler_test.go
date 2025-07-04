@@ -18,7 +18,7 @@ import (
 
 	v1 "github.com/crossplane/crossplane/apis/pkg/v1"
 	"github.com/crossplane/crossplane/apis/pkg/v1beta1"
-	xpkgfake "github.com/crossplane/crossplane/internal/xpkg/fake"
+	xpkgfake "github.com/crossplane/crossplane/pkg/xpkg/fake"
 )
 
 func TestReconcile(t *testing.T) {

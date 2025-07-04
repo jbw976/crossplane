@@ -37,7 +37,7 @@ import (
 	"github.com/crossplane/crossplane-runtime/pkg/errors"
 	"github.com/crossplane/crossplane-runtime/pkg/logging"
 
-	"github.com/crossplane/crossplane/internal/xpkg"
+	"github.com/crossplane/crossplane/pkg/xpkg"
 )
 
 const (
@@ -224,7 +224,7 @@ func (c *extractCmd) Run(logger logging.Logger) error { //nolint:gocyclo // xpkg
 		return errors.Wrap(err, errExtractPackageContents)
 	}
 
-	logger.Debug("xpkg contents extracted to %s", out)
+	logger.Debug("xpkg contents extracted", "path", out)
 
 	return nil
 }

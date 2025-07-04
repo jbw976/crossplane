@@ -46,7 +46,7 @@ import (
 	"github.com/crossplane/crossplane/internal/dag"
 	fakedag "github.com/crossplane/crossplane/internal/dag/fake"
 	"github.com/crossplane/crossplane/internal/features"
-	fakexpkg "github.com/crossplane/crossplane/internal/xpkg/fake"
+	fakexpkg "github.com/crossplane/crossplane/pkg/xpkg/fake"
 )
 
 const (

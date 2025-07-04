@@ -34,7 +34,7 @@ import (
 
 	pkgmetav1 "github.com/crossplane/crossplane/apis/pkg/meta/v1"
 	"github.com/crossplane/crossplane/apis/pkg/meta/v1beta1"
-	"github.com/crossplane/crossplane/internal/xpkg/parser/examples"
+	"github.com/crossplane/crossplane/pkg/xpkg/parser/examples"
 )
 
 const (
