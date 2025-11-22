@@ -29,6 +29,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	kunstructured "k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -36,9 +37,11 @@ import (
 	xpv1 "github.com/crossplane/crossplane-runtime/v2/apis/common/v1"
 	"github.com/crossplane/crossplane-runtime/v2/pkg/errors"
 	"github.com/crossplane/crossplane-runtime/v2/pkg/event"
+	"github.com/crossplane/crossplane-runtime/v2/pkg/logging"
 	"github.com/crossplane/crossplane-runtime/v2/pkg/meta"
 	"github.com/crossplane/crossplane-runtime/v2/pkg/reconciler/managed"
 	"github.com/crossplane/crossplane-runtime/v2/pkg/resource"
+	"github.com/crossplane/crossplane-runtime/v2/pkg/resource/unstructured"
 	"github.com/crossplane/crossplane-runtime/v2/pkg/resource/unstructured/composed"
 	"github.com/crossplane/crossplane-runtime/v2/pkg/resource/unstructured/composite"
 
@@ -108,6 +111,7 @@ type FunctionComposer struct {
 	composite xr
 	pipeline  FunctionRunner
 	resources xfn.RequiredResourcesFetcher
+	log       logging.Logger
 }
 
 type xr struct {
@@ -225,6 +229,13 @@ func WithRequiredResourcesFetcher(f xfn.RequiredResourcesFetcher) FunctionCompos
 	}
 }
 
+// WithFunctionComposerLogger configures how the FunctionComposer should log messages.
+func WithFunctionComposerLogger(l logging.Logger) FunctionComposerOption {
+	return func(p *FunctionComposer) {
+		p.log = l
+	}
+}
+
 // NewFunctionComposer returns a new Composer that supports composing resources using
 // both Patch and Transform (P&T) logic and a pipeline of Composition Functions.
 func NewFunctionComposer(cached, uncached client.Client, r FunctionRunner, o ...FunctionComposerOption) *FunctionComposer {
@@ -243,6 +254,7 @@ func NewFunctionComposer(cached, uncached client.Client, r FunctionRunner, o ...
 
 		pipeline:  r,
 		resources: xfn.NewExistingRequiredResourcesFetcher(cached),
+		log:       logging.NewNopLogger(),
 	}
 
 	for _, fn := range o {
@@ -549,6 +561,51 @@ func (c *FunctionComposer) Compose(ctx context.Context, xr *composite.Unstructur
 	// below. This ensures that issues observing and processing one composed
 	// resource won't block the application of another.
 	for name, cd := range desired {
+		// Prepare for field deletion: explicitly set fields to nil that are owned
+		// by Crossplane but missing from desired state. This ensures server-side
+		// apply will delete these fields rather than leaving them unchanged.
+		if or, exists := observed[ResourceName(name)]; exists {
+			fieldMgr := ComposedFieldOwnerName(xr)
+
+			// DEBUG: Log managed fields and object state
+			if w, ok := or.Resource.(unstructured.Wrapper); ok {
+				obsU := w.GetUnstructured()
+				c.log.Info("DEBUG: Field Manager", "name", name, "fieldManager", fieldMgr)
+
+				// Log ALL managed fields with raw FieldsV1
+				for i, mf := range obsU.GetManagedFields() {
+					c.log.Info("DEBUG: ManagedField entry", "name", name, "index", i,
+						"manager", mf.Manager, "operation", mf.Operation,
+						"fieldsV1Raw", string(mf.FieldsV1.Raw))
+				}
+
+				// Log observed and desired spec structures
+				if obsSpec, found, _ := kunstructured.NestedMap(obsU.Object, "spec"); found {
+					c.log.Info("DEBUG: Observed spec", "name", name, "spec", obsSpec)
+				}
+				if w2, ok := cd.Resource.(unstructured.Wrapper); ok {
+					if desSpec, found, _ := kunstructured.NestedMap(w2.GetUnstructured().Object, "spec"); found {
+						c.log.Info("DEBUG: Desired spec", "name", name, "spec", desSpec)
+					}
+				}
+
+				if debugInfo, err := xfn.DebugFieldPaths(obsU, fieldMgr); err == nil {
+					c.log.Info("DEBUG: Parsed field paths", "name", name, "debug", debugInfo)
+				}
+			}
+
+			pathsToDelete, err := xfn.PrepareResourceForFieldDeletion(or.Resource, cd.Resource, fieldMgr)
+			if err != nil {
+				return CompositionResult{}, errors.Wrapf(err, "cannot prepare field deletion for composed resource %q", name)
+			}
+			c.log.Info("DEBUG: Paths to delete result", "name", name, "pathsToDelete", pathsToDelete, "count", len(pathsToDelete))
+			if len(pathsToDelete) > 0 {
+				c.log.Info("Marking fields for deletion", "name", name, "pathsToDelete", pathsToDelete, "fieldManager", fieldMgr)
+			} else {
+				c.log.Info("DEBUG: No paths found to delete", "name", name, "fieldManager", fieldMgr)
+			}
+		}
+
 		// We don't need any crossplane-runtime resource.Applicator style apply
 		// options here because server-side apply takes care of everything.
 		// Specifically it will merge rather than replace owner references (e.g.
@@ -557,6 +614,9 @@ func (c *FunctionComposer) Compose(ctx context.Context, xr *composite.Unstructur
 		// NOTE(phisco): We need to set a field owner unique for each XR here,
 		// this prevents multiple XRs composing the same resource to be
 		// continuously alternated as controllers.
+		if w, ok := cd.Resource.(unstructured.Wrapper); ok {
+			c.log.Info("Applying composed resource", "name", name, "resource", w.GetUnstructured().Object)
+		}
 		if err := c.client.Patch(ctx, cd.Resource, client.Apply, client.ForceOwnership, client.FieldOwner(ComposedFieldOwnerName(xr))); err != nil {
 			if kerrors.IsInvalid(err) {
 				// We tried applying an invalid resource, we can't tell whether
