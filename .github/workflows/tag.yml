@@ -24,14 +24,14 @@ jobs:
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
 
       - name: Create Tag
-        uses: jbw976/create-tag@6acde0c99312d603f94cae2309a1589a0b5c36cc # allow-path-prefix
+        uses: jbw976/create-tag@ef13afa60cfa220f2456212d189f93fc106e09b7 # allow-path-prefix
         with:
           version: ${{ github.event.inputs.version }}
           message: ${{ github.event.inputs.message }}
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Create apis/ Tag
-        uses: jbw976/create-tag@6acde0c99312d603f94cae2309a1589a0b5c36cc # allow-path-prefix
+        uses: jbw976/create-tag@ef13afa60cfa220f2456212d189f93fc106e09b7 # allow-path-prefix
         with:
           version: apis/${{ github.event.inputs.version }}
           message: ${{ github.event.inputs.message }}
